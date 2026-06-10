@@ -1,0 +1,2437 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ave 转账流程交互原型</title>
+  <style>
+    :root {
+      --blue: #4f7df3;
+      --blue-strong: #2f63ee;
+      --blue-weak: #edf3ff;
+      --text: #141824;
+      --muted: #7c8798;
+      --weak: #a8b0bd;
+      --line: #e9edf5;
+      --bg: #eef2f8;
+      --card: #ffffff;
+      --soft: #f6f8fc;
+      --green: #20a86b;
+      --green-bg: #eaf8f1;
+      --warn: #d88400;
+      --warn-bg: #fff6e5;
+      --danger: #e04747;
+      --danger-bg: #fff0f0;
+      --shadow: 0 24px 64px rgba(24, 39, 75, 0.16);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 16% 12%, rgba(79, 125, 243, 0.16), transparent 30%),
+        radial-gradient(circle at 86% 20%, rgba(79, 125, 243, 0.10), transparent 34%),
+        var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+    }
+
+    button, input {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+      background: transparent;
+    }
+
+    .page {
+      min-height: 100vh;
+      padding: 42px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 36px;
+    }
+
+    .intro {
+      width: 300px;
+      padding-top: 72px;
+    }
+
+    .intro-badge {
+      display: inline-flex;
+      height: 26px;
+      align-items: center;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: #1f2937;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+    }
+
+    .intro h1 {
+      margin: 16px 0 8px;
+      font-size: 32px;
+      line-height: 1.12;
+      letter-spacing: -0.04em;
+    }
+
+    .intro p {
+      margin: 0;
+      color: #657386;
+      line-height: 1.75;
+      font-size: 15px;
+    }
+
+    .intro-card {
+      margin-top: 22px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.78);
+      border: 1px solid rgba(255,255,255,0.7);
+      box-shadow: 0 14px 36px rgba(30, 45, 80, 0.08);
+      padding: 18px;
+    }
+
+    .intro-card h2 {
+      margin: 0 0 10px;
+      font-size: 16px;
+    }
+
+    .intro-card ul {
+      padding-left: 18px;
+      margin: 0;
+      color: #6c788a;
+      line-height: 1.72;
+      font-size: 13px;
+    }
+
+    .phone-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .live {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #384254;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .live span {
+      display: inline-flex;
+      height: 22px;
+      align-items: center;
+      padding: 0 9px;
+      border-radius: 999px;
+      background: var(--blue);
+      color: #fff;
+      font-size: 12px;
+      letter-spacing: 0.05em;
+    }
+
+    .phone {
+      width: 390px;
+      height: 844px;
+      border-radius: 44px;
+      padding: 10px;
+      background: #101624;
+      box-shadow: var(--shadow);
+      position: relative;
+    }
+
+    .phone::before {
+      content: "";
+      position: absolute;
+      inset: -7px;
+      border: 5px solid var(--blue-strong);
+      border-radius: 52px;
+      pointer-events: none;
+      filter: drop-shadow(0 10px 18px rgba(47, 99, 238, 0.25));
+    }
+
+    .screen {
+      height: 100%;
+      overflow: hidden;
+      border-radius: 34px;
+      background: #fff;
+      position: relative;
+    }
+
+    .status {
+      height: 34px;
+      padding: 9px 18px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      color: #1b2533;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+    }
+
+    .signal {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #0f172a;
+      font-size: 12px;
+    }
+
+    .battery {
+      height: 14px;
+      min-width: 36px;
+      padding: 1px 5px;
+      border-radius: 8px;
+      color: #21a66c;
+      background: #dcf8e9;
+      font-size: 10px;
+      font-weight: 900;
+    }
+
+    .app {
+      height: calc(100% - 34px);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .nav {
+      height: 52px;
+      display: grid;
+      grid-template-columns: 50px 1fr 50px;
+      align-items: center;
+      padding: 0 18px;
+      background: #fff;
+      z-index: 3;
+    }
+
+    .nav-title {
+      text-align: center;
+      font-size: 18px;
+      font-weight: 850;
+      letter-spacing: -0.02em;
+    }
+
+    .nav-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .icon-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      color: #4b5565;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+      font-size: 16px;
+      font-weight: 900;
+    }
+
+    .back {
+      width: 34px;
+      height: 34px;
+      color: #111827;
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-start;
+      font-size: 36px;
+      line-height: 1;
+      font-weight: 300;
+    }
+
+    .scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 16px 98px;
+      scrollbar-width: none;
+    }
+
+    .detail-scroll {
+      padding-bottom: 112px;
+    }
+
+    .transfer-scroll {
+      padding-bottom: 92px;
+    }
+
+    .transfer-scroll-with-fee {
+      padding-bottom: 92px;
+    }
+
+    .transfer-scroll .section-title {
+      margin: 12px 0 7px;
+    }
+
+    .result-scroll {
+      padding-bottom: 96px;
+    }
+
+    .scroll::-webkit-scrollbar { display: none; }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 13px 0 7px;
+      font-size: 14px;
+      font-weight: 850;
+    }
+
+    .section-title small {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .card {
+      border-radius: 18px;
+      background: var(--soft);
+      border: 1px solid rgba(233, 237, 245, 0.74);
+    }
+
+    .source-card {
+      overflow: hidden;
+      padding: 0;
+      background: #f7f9fd;
+    }
+
+    .source-row {
+      width: 100%;
+      min-height: 62px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 12px;
+      text-align: left;
+    }
+
+    .source-row + .source-row {
+      border-top: 1px solid var(--line);
+    }
+
+    .source-label {
+      width: 48px;
+      flex: 0 0 auto;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .source-row .coin {
+      width: 34px;
+      height: 34px;
+      font-size: 11px;
+    }
+
+    .source-row .name {
+      font-size: 15px;
+    }
+
+    .source-action {
+      margin-left: auto;
+      color: var(--blue-strong);
+      font-size: 13px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .source-row .amount-side {
+      font-size: 14px;
+    }
+
+    .wallet-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+    }
+
+    .coin {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f3ba2f;
+      color: #111827;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .coin.dark {
+      background: #161b27;
+      color: #f3ba2f;
+    }
+
+    .main {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .name-row {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      min-width: 0;
+    }
+
+    .name {
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      font-weight: 850;
+      font-size: 16px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      height: 20px;
+      padding: 0 8px;
+      border-radius: 999px;
+      background: var(--blue-weak);
+      color: var(--blue-strong);
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .tag.ghost {
+      background: #eef1f6;
+      color: #667085;
+    }
+
+    .sub {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+      letter-spacing: 0.01em;
+    }
+
+    .switch {
+      color: var(--blue-strong);
+      font-weight: 850;
+      font-size: 13px;
+      padding: 6px 0 6px 10px;
+    }
+
+    .token-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+    }
+
+    .token-strip {
+      min-height: 56px;
+      padding: 10px 12px;
+      background: #fff;
+      border-color: var(--line);
+    }
+
+    .token-strip .coin {
+      position: relative;
+    }
+
+    .chain-corner {
+      position: absolute;
+      right: -3px;
+      bottom: -3px;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      background: #161b27;
+      color: #f3ba2f;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 7px;
+      font-weight: 900;
+    }
+
+    .token-strip .name {
+      font-size: 17px;
+      font-weight: 850;
+    }
+
+    .selectable-card {
+      width: 100%;
+      text-align: left;
+    }
+
+    .chevron {
+      color: #9aa3b2;
+      font-size: 22px;
+      font-weight: 400;
+      margin-left: 2px;
+    }
+
+    .amount-side {
+      margin-left: auto;
+      text-align: right;
+      font-weight: 850;
+    }
+
+    .amount-side small {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .field {
+      min-height: 58px;
+      padding: 0 10px 0 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 18px;
+      background: var(--soft);
+      border: 1px solid transparent;
+    }
+
+    .field.selected {
+      background: #f7faff;
+      border-color: rgba(79, 125, 243, 0.22);
+    }
+
+    .field.compact-field {
+      min-height: 62px;
+      padding: 8px 10px 8px 14px;
+    }
+
+    .field-main {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .compact-field .address-input {
+      width: 100%;
+      height: 28px;
+    }
+
+    .field-meta {
+      margin-top: 2px;
+      color: #4662a8;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .address-input {
+      flex: 1;
+      min-width: 0;
+      height: 56px;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: #1f2937;
+      font-size: 15px;
+      font-weight: 750;
+    }
+
+    .address-input::placeholder {
+      color: #a6afbd;
+      font-weight: 650;
+    }
+
+    .inline-actions {
+      display: flex;
+      gap: 6px;
+      flex: 0 0 auto;
+      align-items: center;
+    }
+
+    .inline-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 11px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #5f6b7a;
+      background: #fff;
+      border: 1px solid var(--line);
+    }
+
+    .inline-icon svg {
+      width: 17px;
+      height: 17px;
+      stroke: currentColor;
+      stroke-width: 2.2;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .address-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .mini-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      color: #5d6878;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 4px 0;
+    }
+
+    .recipient-preview {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 8px;
+      padding-top: 10px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .route-card {
+      position: relative;
+      overflow: visible;
+      padding: 0;
+      background: #f7f9fd;
+      border-color: rgba(222, 228, 238, 0.9);
+    }
+
+    .route-row {
+      min-height: 62px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+    }
+
+    .route-row + .route-row {
+      border-top: 1px solid var(--line);
+      padding-top: 14px;
+    }
+
+    .route-label {
+      width: 56px;
+      flex: 0 0 auto;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .route-content {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .route-row .coin {
+      width: 34px;
+      height: 34px;
+      font-size: 11px;
+    }
+
+    .route-row .name {
+      font-size: 15px;
+    }
+
+    .route-address {
+      color: #1f2937;
+      font-size: 15px;
+      font-weight: 850;
+      line-height: 1.2;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .route-address-text {
+      min-width: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .route-action {
+      color: var(--blue-strong);
+      font-size: 13px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .route-arrow {
+      position: absolute;
+      left: 50%;
+      top: 49px;
+      z-index: 2;
+      width: 34px;
+      height: 34px;
+      transform: translateX(-50%);
+      border: 6px solid #fff;
+      border-radius: 50%;
+      background: #f1f4fa;
+      color: #1f2937;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 950;
+      box-shadow: 0 6px 16px rgba(30, 45, 80, 0.08);
+    }
+
+    .route-input {
+      width: 100%;
+      height: 28px;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: #1f2937;
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .route-input::placeholder {
+      color: #a6afbd;
+      font-weight: 650;
+    }
+
+    .route-meta {
+      margin-top: 3px;
+      color: #4662a8;
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .inline-note {
+      margin-top: 6px;
+      padding: 0 2px;
+      color: #7c8798;
+      font-size: 12px;
+      line-height: 1.45;
+      font-weight: 700;
+    }
+
+    .recipient-chip {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .recipient-summary {
+      min-width: 0;
+      color: #1f2937;
+      font-size: 15px;
+      font-weight: 850;
+      line-height: 1.2;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .recipient-summary em {
+      color: var(--blue-strong);
+      font-style: normal;
+      font-weight: 900;
+    }
+
+    .recipient-clear {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #d1d6df;
+      color: #fff;
+      font-size: 18px;
+      line-height: 1;
+      font-weight: 700;
+      flex: 0 0 auto;
+    }
+
+    .text-link {
+      color: var(--blue-strong);
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .amount-card {
+      padding: 13px 14px;
+    }
+
+    .amount-input-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .amount-main {
+      min-width: 0;
+      flex: 1;
+      display: flex;
+      align-items: baseline;
+      gap: 7px;
+    }
+
+    .amount-input {
+      width: 0;
+      flex: 0 1 150px;
+      min-width: 88px;
+      max-width: 150px;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: #1c2433;
+      font-size: 30px;
+      font-weight: 850;
+      letter-spacing: -0.04em;
+    }
+
+    .amount-usd {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+
+    .amount-input::placeholder {
+      color: #b7bfcb;
+    }
+
+    .unit {
+      color: #4b5565;
+      font-weight: 850;
+    }
+
+    .max-btn {
+      height: 36px;
+      min-width: 54px;
+      border-radius: 12px;
+      border: 1px solid var(--blue);
+      color: var(--blue-strong);
+      background: #fff;
+      font-weight: 850;
+    }
+
+    .balance-row {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .balance-row strong {
+      color: #1f2937;
+      font-weight: 900;
+    }
+
+    .hint {
+      margin-top: 7px;
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      border-radius: 12px;
+      padding: 8px 10px;
+      background: var(--blue-weak);
+      color: #4662a8;
+      font-size: 12px;
+      line-height: 1.45;
+      font-weight: 650;
+    }
+
+    .warn {
+      background: var(--warn-bg);
+      color: #956100;
+    }
+
+    .danger {
+      background: var(--danger-bg);
+      color: var(--danger);
+    }
+
+    .risk-alert {
+      border: 1px solid rgba(224, 71, 71, 0.72);
+      background: #fff4f4;
+      color: #c62828;
+      font-weight: 900;
+      line-height: 1.5;
+      padding: 9px 10px;
+      margin: 0 0 10px;
+      border-radius: 12px;
+      font-size: 12px;
+    }
+
+    .detail-bottom {
+      padding-top: 8px;
+      background: #fff;
+    }
+
+    .gas-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+
+    .gas-card {
+      min-height: 48px;
+      padding: 7px 6px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: var(--soft);
+      text-align: center;
+    }
+
+    .gas-card.active {
+      border-color: var(--blue);
+      background: #f6f9ff;
+      box-shadow: inset 0 0 0 1px rgba(79, 125, 243, 0.24);
+    }
+
+    .gas-card .gas-name {
+      font-size: 12px;
+      color: #6b7482;
+      font-weight: 800;
+    }
+
+    .gas-card.active .gas-name { color: var(--blue-strong); }
+
+    .gas-card strong {
+      display: block;
+      margin: 4px 0 0;
+      color: #303948;
+      font-size: 11px;
+    }
+
+    .gas-card small {
+      display: none;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 650;
+    }
+
+    .summary-card {
+      padding: 0 14px;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 11px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 14px;
+    }
+
+    .summary-row:last-child {
+      border-bottom: 0;
+    }
+
+    .summary-row span {
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .summary-row strong {
+      text-align: right;
+      color: #1f2937;
+      font-weight: 850;
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .summary-row.emphasis span,
+    .summary-row.emphasis strong {
+      color: #141824;
+      font-size: 16px;
+      font-weight: 950;
+    }
+
+    .detail-card .summary-row {
+      align-items: flex-start;
+    }
+
+    .detail-card .summary-row.stack-row {
+      display: block;
+    }
+
+    .detail-card .summary-row.stack-row span {
+      display: block;
+      margin-bottom: 7px;
+    }
+
+    .detail-card .summary-row.stack-row strong {
+      display: block;
+      text-align: left;
+      line-height: 1.35;
+    }
+
+    .inline-value {
+      display: inline-flex;
+      min-width: 0;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .copy-btn {
+      height: 26px;
+      padding: 0 9px;
+      border-radius: 999px;
+      background: #eef3ff;
+      color: var(--blue-strong);
+      font-size: 12px;
+      font-weight: 900;
+      flex: 0 0 auto;
+    }
+
+    .link-value {
+      color: var(--blue-strong);
+      font-weight: 900;
+    }
+
+    .bottom {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 5;
+      padding: 10px 18px 18px;
+      background: linear-gradient(to bottom, rgba(255,255,255,0.72), #fff 34%);
+      border-top: 1px solid rgba(233, 237, 245, 0.86);
+    }
+
+    .primary {
+      width: 100%;
+      height: 50px;
+      border-radius: 15px;
+      background: var(--blue);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 900;
+      box-shadow: 0 10px 22px rgba(79, 125, 243, 0.22);
+    }
+
+    .primary:disabled {
+      background: #c6ccd8;
+      box-shadow: none;
+      cursor: default;
+    }
+
+    .secondary-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .secondary {
+      height: 46px;
+      border-radius: 14px;
+      background: #f4f6fb;
+      color: #374151;
+      font-weight: 850;
+    }
+
+    .transfer-bottom {
+      background: #fff;
+    }
+
+    .result-bottom .secondary-row {
+      margin-top: 0;
+    }
+
+    .result-bottom .primary,
+    .result-bottom .secondary {
+      height: 48px;
+    }
+
+    .sheet-mask {
+      position: absolute;
+      inset: 0;
+      z-index: 20;
+      background: rgba(17, 24, 39, 0.46);
+      display: flex;
+      align-items: flex-end;
+    }
+
+    .sheet {
+      width: 100%;
+      max-height: 78%;
+      min-height: 520px;
+      background: #fff;
+      border-radius: 24px 24px 0 0;
+      padding: 10px 16px 96px;
+      position: relative;
+      overflow: hidden;
+      animation: slideUp 0.18s ease-out;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(30px); opacity: 0.7; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .drag {
+      width: 42px;
+      height: 5px;
+      border-radius: 999px;
+      background: #e2e6ee;
+      margin: 2px auto 16px;
+    }
+
+    .sheet-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .sheet-title {
+      margin: 0;
+      font-size: 21px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+    }
+
+    .sheet-sub {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 7px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .checkbox-icon {
+      width: 15px;
+      height: 15px;
+      border-radius: 4px;
+      border: 2px solid var(--blue);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--blue);
+      font-size: 10px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .close {
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      color: #8c96a6;
+      font-size: 30px;
+      line-height: 1;
+    }
+
+    .tabs {
+      margin: 18px 0 12px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      padding: 4px;
+      border-radius: 14px;
+      background: #f3f5f9;
+      gap: 4px;
+    }
+
+    .tab {
+      height: 42px;
+      border-radius: 11px;
+      color: #7f8897;
+      font-weight: 850;
+    }
+
+    .tab.active {
+      background: #fff;
+      color: #1f2937;
+      box-shadow: 0 5px 12px rgba(20, 30, 54, 0.06);
+    }
+
+    .search {
+      height: 48px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 0 14px;
+      border-radius: 15px;
+      background: var(--soft);
+      color: #a7b0bd;
+      font-size: 14px;
+      font-weight: 650;
+    }
+
+    .sheet-scroll {
+      height: 278px;
+      overflow-y: auto;
+      margin: 14px -8px 0;
+      padding: 0 8px 18px;
+      scrollbar-width: none;
+    }
+
+    .sheet-scroll::-webkit-scrollbar { display: none; }
+
+    .list-caption {
+      color: #8a94a4;
+      font-size: 12px;
+      font-weight: 800;
+      margin: 2px 0 9px;
+    }
+
+    .address-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border: 1px solid transparent;
+      border-radius: 16px;
+      margin-bottom: 9px;
+      background: #fff;
+    }
+
+    .address-row.selected {
+      background: #f4f8ff;
+      border-color: rgba(79, 125, 243, 0.42);
+    }
+
+    .select-box {
+      width: 30px;
+      height: 30px;
+      border-radius: 10px;
+      border: 2px solid #dbe1ea;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 900;
+      flex: 0 0 auto;
+    }
+
+    .address-row.selected .select-box {
+      border-color: var(--blue);
+      background: var(--blue);
+    }
+
+    .sheet-bottom {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 12px 16px 22px;
+      border-top: 1px solid var(--line);
+      background: #fff;
+      display: grid;
+      grid-template-columns: 1fr 150px;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .selected-count {
+      color: #5f6b7a;
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1.35;
+    }
+
+    .selected-count strong {
+      color: var(--blue-strong);
+      font-size: 18px;
+    }
+
+    .sheet-confirm {
+      height: 48px;
+      border-radius: 14px;
+      background: var(--blue);
+      color: #fff;
+      font-weight: 900;
+    }
+
+    .sheet-confirm:disabled {
+      background: #c6ccd8;
+    }
+
+    .confirm-hero {
+      text-align: center;
+      padding: 10px 0 4px;
+    }
+
+    .confirm-hero .label-small {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .confirm-hero .big {
+      margin-top: 8px;
+      font-size: 34px;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+    }
+
+    .confirm-hero .desc {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .detail-hero-card {
+      margin-top: 8px;
+      padding: 18px 16px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, #f7f9fe, #f1f4fa);
+      border: 1px solid var(--line);
+      text-align: center;
+    }
+
+    .detail-hero-card .label-small {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .detail-hero-card .big {
+      margin-top: 8px;
+      color: #202938;
+      font-size: 30px;
+      font-weight: 950;
+      letter-spacing: -0.04em;
+    }
+
+    .detail-hero-card .desc {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .detail-sub {
+      display: block;
+      margin-top: 5px;
+      color: #a0a8b4;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .detail-inline {
+      display: inline-flex;
+      max-width: 100%;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .detail-inline .value {
+      min-width: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .recipient-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .recipient-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 9px 10px;
+      border-radius: 12px;
+      background: #fff;
+      border: 1px solid var(--line);
+      color: #374151;
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .detail-card .recipient-line {
+      padding: 8px 10px;
+    }
+
+    .detail-card .recipient-line span {
+      flex: 0 0 auto;
+      color: #1f2937;
+      font-weight: 900;
+    }
+
+    .detail-card .recipient-line strong {
+      color: #5f6b7a;
+      font-weight: 750;
+      line-height: 1.35;
+      text-align: right;
+      overflow-wrap: anywhere;
+    }
+
+    .processing {
+      position: absolute;
+      inset: 0;
+      z-index: 40;
+      background: rgba(255, 255, 255, 0.94);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 30px;
+    }
+
+    .spinner {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 4px solid #dbe6ff;
+      border-top-color: var(--blue);
+      margin: 0 auto 16px;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .result-hero {
+      text-align: center;
+      padding: 8px 0 8px;
+    }
+
+    .result-mark {
+      width: 52px;
+      height: 52px;
+      margin: 0 auto 6px;
+      border-radius: 50%;
+      background: var(--green-bg);
+      color: var(--green);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 31px;
+      font-weight: 900;
+    }
+
+    .result-amount {
+      margin-top: 0;
+      font-size: 30px;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+    }
+
+    .result-scroll .section-title {
+      margin: 8px 0 7px;
+    }
+
+    .result-detail-card {
+      padding: 0 12px;
+      border-radius: 16px;
+    }
+
+    .result-detail-card .summary-row {
+      padding: 9px 0;
+      font-size: 13px;
+    }
+
+    .result-detail-card .summary-row.stack-row {
+      padding: 9px 0;
+    }
+
+    .result-detail-card .summary-row.stack-row span {
+      margin-bottom: 5px;
+    }
+
+    .result-detail-card .detail-sub {
+      margin-top: 3px;
+      font-size: 11px;
+    }
+
+    .toast {
+      position: absolute;
+      left: 28px;
+      right: 28px;
+      bottom: 96px;
+      z-index: 50;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 14px;
+      background: rgba(20, 24, 36, 0.9);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 800;
+      box-shadow: 0 14px 30px rgba(0,0,0,0.18);
+    }
+
+    .guide {
+      width: 420px;
+      margin-top: 112px;
+      padding: 26px;
+      border-radius: 22px;
+      background: rgba(255,255,255,0.86);
+      border: 1px solid rgba(255,255,255,0.75);
+      box-shadow: 0 18px 48px rgba(30, 45, 80, 0.10);
+    }
+
+    .guide h2 {
+      margin: 0 0 8px;
+      font-size: 20px;
+      letter-spacing: -0.02em;
+    }
+
+    .guide .label {
+      display: inline-flex;
+      height: 24px;
+      align-items: center;
+      padding: 0 8px;
+      border-radius: 7px;
+      background: var(--blue-weak);
+      color: var(--blue-strong);
+      font-weight: 900;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+    }
+
+    .guide h3 {
+      margin: 20px 0 8px;
+      padding-left: 10px;
+      border-left: 3px solid var(--blue);
+      color: #5a6677;
+      font-size: 14px;
+    }
+
+    .guide ul {
+      margin: 0;
+      padding-left: 20px;
+      color: #697587;
+      line-height: 1.72;
+      font-size: 14px;
+    }
+
+    .guide strong {
+      color: #2f63ee;
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <aside class="intro">
+      <span class="intro-badge">AVE WALLET</span>
+      <h1>转账流程可交互原型</h1>
+      <p>基于 Claude 当前稿和你的反馈重新收敛：保留付款钱包切换、显式多选、批量同额转账、简洁确认页，以及不显示签名/广播中间状态的结果页。</p>
+      <div class="intro-card">
+        <h2>这版重点</h2>
+        <ul>
+          <li>按钮固定在手机底部，不跟随内容滚动。</li>
+          <li>收款地址选择用 checkbox 明确表达可多选。</li>
+          <li>批量转账只填一个“每个地址金额”，不做单地址自定义金额。</li>
+          <li>删除交易所地址、交易所等标签展示。</li>
+          <li>确认页支持“查看全部”展开收款地址。</li>
+        </ul>
+      </div>
+    </aside>
+
+    <section class="phone-col">
+      <div class="live"><span>LIVE</span>主流程原型</div>
+      <div class="phone">
+        <div class="screen">
+          <div class="status">
+            <div>10:29</div>
+            <div class="signal"><span>VPN</span><span>5G</span><span class="battery">100</span></div>
+          </div>
+          <div id="phoneApp" class="app"></div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="guide">
+      <h2>如何体验这版原型</h2>
+      <span class="label">INTERACTIVE</span>
+      <h3>主路径</h3>
+      <ul>
+        <li>点击<strong>收款地址输入框</strong>可直接输入或粘贴地址。</li>
+        <li>点击输入框内的<strong>通讯录 icon</strong>打开地址弹窗，勾选多个地址自动进入批量转账。</li>
+        <li>输入金额或点<strong>最大</strong>，选择矿工费，点<strong>下一步</strong>。</li>
+        <li>填写页不展示明细汇总，避免和下一步重复。</li>
+        <li>二级「转账详情」页顶部只展示转账类型和总数量，下面一张明细卡集中确认网络、地址、单地址金额和费用。</li>
+        <li>确认后进入交易结果页。</li>
+      </ul>
+      <h3>设计判断</h3>
+      <ul>
+        <li>多选能力从“隐藏规则”改为“显式 checkbox + 已选数量”。</li>
+        <li>单/多地址共用同一个收款地址输入框，选择后不改变输入框形态。</li>
+        <li>结果页只呈现用户关心的成功结果、hash、费用、网络和时间。</li>
+      </ul>
+    </aside>
+  </main>
+
+  <script>
+    const wallets = [
+      { id: "main", name: "我的主钱包", type: "链钱包", address: "0x86fe...ed1f", fullAddress: "0x86fe2A9B72E9c4dBC6E0f2F9358B313d8Aed1F", balance: "0.0193 BNB", usd: "$11.82" },
+      { id: "bot", name: "托管钱包 01", type: "托管钱包", address: "0x31ac...4b09", fullAddress: "0x31ac8F5E431c2458B9e6dB7B4A91Aa2C044b4B09", balance: "0.4280 BNB", usd: "$262.10" },
+      { id: "observe", name: "观察钱包", type: "观察钱包", address: "0x9fa2...87c1", fullAddress: "0x9fa2EFa758a39386efA309D66f02d332f7c587C1", balance: "1.2000 BNB", usd: "$734.40" }
+    ];
+
+    const addresses = [
+      { id: "a1", tab: "recent", name: "Wallet 3468", address: "0xda80...3468", fullAddress: "0xda80aB2CF7e99fE402233D4db853b0D9aA2d3468", balance: "BNB: 0.0052 · 余额 $3.18" },
+      { id: "a2", tab: "recent", name: "Wallet a707", address: "0x4c2e...a707", fullAddress: "0x4c2eeE61538fD67f286cd7B8d15Daf2C9C71a707", balance: "BNB: 0 · 余额 $0.00" },
+      { id: "a3", tab: "recent", name: "Wallet 59d4", address: "0x50aa...59d4", fullAddress: "0x50aa297AaD2F8486bF21a042c4187048dEec59d4", balance: "BNB: 0.0121 · 余额 $7.41" },
+      { id: "w1", tab: "mine", name: "链钱包 02", address: "0x7c09...77a8", fullAddress: "0x7c09F18dB7B8dD92437C1B4788F34f9b2D6c77a8", balance: "BNB: 0.0840 · 余额 $51.41" },
+      { id: "w2", tab: "mine", name: "托管钱包 02", address: "0x27b4...8e20", fullAddress: "0x27b41a6fCb25d8CE931016E11aDF6551c1f08e20", balance: "BNB: 0.0000 · 余额 $0.00" },
+      { id: "b1", tab: "book", name: "Axon 备用地址", address: "0x21e0...9012", fullAddress: "0x21e04A6a0f3116D1199b4ad128A742Bc15c19012", balance: "备注：常用收款" },
+      { id: "b2", tab: "book", name: "运营测试地址", address: "0xb93e...0c18", fullAddress: "0xb93e4197A51D9e9604fE333B7445574281300c18", balance: "备注：内部测试" }
+    ];
+
+    const tokens = [
+      { id: "bnb", symbol: "BNB", name: "BNB", network: "BSC", balance: "0.0193", usd: "$11.82", price: 612 },
+      { id: "usdt", symbol: "USDT", name: "Tether USD", network: "BSC", balance: "128.62", usd: "$128.62", price: 1 },
+      { id: "cake", symbol: "CAKE", name: "PancakeSwap", network: "BSC", balance: "8.42", usd: "$21.30", price: 2.53 }
+    ];
+
+    const gasOptions = {
+      slow: { name: "慢", value: "0.00000421", usd: "$0.00258" },
+      recommend: { name: "推荐", value: "0.00000546", usd: "$0.00334" },
+      fast: { name: "快", value: "0.00000672", usd: "$0.00411" }
+    };
+
+    const txHash = "0x974f8A0b2C7e99fE402233D4db853b0D9aA2d6c32";
+
+    const state = {
+      screen: "transfer",
+      walletId: "main",
+      tokenId: "bnb",
+      selectedIds: [],
+      draftIds: [],
+      recipientInput: "",
+      activeTab: "recent",
+      amount: "",
+      gas: "recommend",
+      confirmExpanded: false,
+      resultExpanded: false,
+      showAddressSheet: false,
+      showWalletSheet: false,
+      showTokenSheet: false,
+      toast: "",
+      processing: false
+    };
+
+    const app = document.querySelector("#phoneApp");
+    let toastTimer = null;
+
+    function wallet() {
+      return wallets.find(item => item.id === state.walletId) || wallets[0];
+    }
+
+    function token() {
+      return tokens.find(item => item.id === state.tokenId) || tokens[0];
+    }
+
+    function selectedAddresses() {
+      return state.selectedIds.map(id => addresses.find(item => item.id === id)).filter(Boolean);
+    }
+
+    function recipientCount() {
+      if (state.selectedIds.length) return state.selectedIds.length;
+      return state.recipientInput.trim() ? 1 : 0;
+    }
+
+    function recipientValue() {
+      const selected = selectedAddresses();
+      if (selected.length === 1) return selected[0].fullAddress;
+      if (selected.length > 1) return `已选择 ${selected.length} 个收款地址`;
+      return state.recipientInput;
+    }
+
+    function amountNum() {
+      const n = Number(state.amount);
+      return Number.isFinite(n) && n > 0 ? n : 0;
+    }
+
+    function rawTotalAmount() {
+      return amountNum() * Math.max(recipientCount(), 1);
+    }
+
+    function totalAmount() {
+      const total = rawTotalAmount();
+      return total ? total.toFixed(4).replace(/0+$/, "").replace(/\.$/, "") : "0";
+    }
+
+    function totalDeduction() {
+      const total = rawTotalAmount();
+      return total ? total.toFixed(6).replace(/0+$/, "").replace(/\.$/, "") : "0";
+    }
+
+    function gas() {
+      return gasOptions[state.gas] || gasOptions.recommend;
+    }
+
+    function canNext() {
+      return recipientCount() > 0 && amountNum() > 0;
+    }
+
+    function nextButtonText() {
+      if (!recipientCount()) return "请填写收款地址";
+      if (!amountNum()) return "请输入转账金额";
+      return "下一步";
+    }
+
+    function esc(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;");
+    }
+
+    function deductionLabel() {
+      const t = token();
+      return `${totalDeduction()} ${t.symbol}`;
+    }
+
+    function formatAmount(value, decimals = 6) {
+      const n = Number(value);
+      if (!Number.isFinite(n) || n <= 0) return "0";
+      return n.toFixed(decimals).replace(/0+$/, "").replace(/\.$/, "");
+    }
+
+    function gasUsdNumber() {
+      return Number(gas().usd.replace(/[^\d.]/g, "")) || 0;
+    }
+
+    function feeInTokenAmount() {
+      const t = token();
+      if (t.symbol === "BNB") return Number(gas().value);
+      return gasUsdNumber() / t.price;
+    }
+
+    function feeInTokenLabel() {
+      const t = token();
+      return formatAmount(feeInTokenAmount(), t.symbol === "BNB" ? 8 : 6);
+    }
+
+    function networkFeeLabel() {
+      const t = token();
+      if (t.symbol === "BNB") return `${gas().value} BNB ≈ ${gas().usd}`;
+      return `${gas().value} BNB ≈ ${feeInTokenLabel()} ${t.symbol}`;
+    }
+
+    function receivedPerAddressAmount() {
+      return Math.max(amountNum() - feeInTokenAmount(), 0);
+    }
+
+    function receivedPerAddressLabel() {
+      const t = token();
+      return `${formatAmount(receivedPerAddressAmount(), t.symbol === "BNB" ? 8 : 6)} ${t.symbol}`;
+    }
+
+    function shortHash() {
+      return `${txHash.slice(0, 6)}...${txHash.slice(-6)}`;
+    }
+
+    function addressBookIcon() {
+      return `
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M7 4h9a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"></path>
+          <path d="M8 8h6"></path><path d="M8 12h8"></path><path d="M8 16h5"></path>
+        </svg>
+      `;
+    }
+
+    function scanIcon() {
+      return `
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 8V5a1 1 0 0 1 1-1h3"></path>
+          <path d="M16 4h3a1 1 0 0 1 1 1v3"></path>
+          <path d="M20 16v3a1 1 0 0 1-1 1h-3"></path>
+          <path d="M8 20H5a1 1 0 0 1-1-1v-3"></path>
+          <path d="M8 12h8"></path>
+        </svg>
+      `;
+    }
+
+    function showToast(text) {
+      state.toast = text;
+      render();
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        state.toast = "";
+        render();
+      }, 1600);
+    }
+
+    function render(focusId) {
+      if (state.screen === "confirm") app.innerHTML = confirmPage();
+      else if (state.screen === "result") app.innerHTML = resultPage();
+      else app.innerHTML = transferPage();
+
+      if (state.showAddressSheet) app.insertAdjacentHTML("beforeend", addressSheet());
+      if (state.showWalletSheet) app.insertAdjacentHTML("beforeend", walletSheet());
+      if (state.showTokenSheet) app.insertAdjacentHTML("beforeend", tokenSheet());
+      if (state.processing) app.insertAdjacentHTML("beforeend", processingLayer());
+      if (state.toast) app.insertAdjacentHTML("beforeend", `<div class="toast">${state.toast}</div>`);
+
+      if (focusId) {
+        const input = document.querySelector(`#${focusId}`);
+        if (input) input.focus({ preventScroll: true });
+      }
+    }
+
+    function nav(title) {
+      const backAction = state.screen === "transfer" ? "toast-home" : "back-transfer";
+      return `
+        <div class="nav">
+          <button class="back" data-action="${backAction}" aria-label="返回">‹</button>
+          <div class="nav-title">${title}</div>
+          <div class="nav-actions"></div>
+        </div>
+      `;
+    }
+
+    function transferPage() {
+      const selected = selectedAddresses();
+      const multi = selected.length > 1;
+      return `
+        ${nav("转账")}
+        <div class="scroll transfer-scroll ${amountNum() ? "transfer-scroll-with-fee" : ""}">
+          <div class="section-title">转账币种</div>
+          ${tokenCard()}
+
+          <div class="section-title">转账路径</div>
+          ${routeCard(selected)}
+
+          <div class="section-title">${multi ? "单地址金额" : "转账金额"}</div>
+          ${amountField(multi)}
+
+          <div class="section-title">
+            <span>矿工费</span>
+            <small>BSC · Gas</small>
+          </div>
+          ${gasGrid()}
+        </div>
+        <div class="bottom transfer-bottom">
+          <button class="primary" data-action="next" ${canNext() ? "" : "disabled"}>${nextButtonText()}</button>
+        </div>
+      `;
+    }
+
+    function routeCard(selected) {
+      const w = wallet();
+      return `
+        <div class="card route-card">
+          <div class="route-row">
+            <div class="route-label">付款地址</div>
+            <div class="route-content">
+              <div class="route-address">
+                <span class="route-address-text">${displayWalletName(w)}</span>
+                <span class="tag">${w.type}</span>
+              </div>
+            </div>
+            <button class="route-action" data-action="open-wallet-sheet">切换</button>
+          </div>
+
+          <div class="route-arrow">↓</div>
+
+          <div class="route-row">
+            <div class="route-label">收款地址</div>
+            <div class="route-content">
+              ${recipientRouteContent(selected)}
+            </div>
+            <div class="inline-actions">
+              <button class="inline-icon" data-action="open-address-sheet" title="通讯录">${addressBookIcon()}</button>
+              <button class="inline-icon" data-action="scan" title="扫码">${scanIcon()}</button>
+            </div>
+          </div>
+        </div>
+        ${selected.length > 1 ? `<div class="inline-note">已选择 ${selected.length} 个收款地址，将按同一金额批量转账。</div>` : ""}
+      `;
+    }
+
+    function displayWalletName(item) {
+      return item.name || item.address;
+    }
+
+    function walletDetailLabel() {
+      const w = wallet();
+      return `<span class="detail-inline"><span class="value">${displayWalletName(w)}</span><span class="tag">${w.type}</span></span>`;
+    }
+
+    function displayAddressName(item) {
+      return item.name || item.address;
+    }
+
+    function recipientRouteContent(selected) {
+      if (selected.length) {
+        return `
+          <div class="recipient-chip">
+            <button class="recipient-summary" data-action="open-address-sheet">${recipientSummary(selected)}</button>
+            <button class="recipient-clear" data-action="clear-recipients" aria-label="清空收款地址">×</button>
+          </div>
+        `;
+      }
+
+      const value = recipientValue();
+      return `
+        <input id="recipientInput" class="route-input" value="${esc(value)}" placeholder="输入或粘贴钱包地址" />
+        ${selected.length === 1 ? `<div class="route-meta">${displayAddressName(selected[0])}</div>` : ""}
+      `;
+    }
+
+    function recipientSummary(selected) {
+      if (selected.length === 1) return displayAddressName(selected[0]);
+      const names = selected.slice(0, 2).map(item => displayAddressName(item)).join("、");
+      const rest = selected.length > 2 ? ` <em>等 ${selected.length} 个钱包</em>` : "";
+      return `${names}${rest}`;
+    }
+
+    function sourceCard() {
+      const w = wallet();
+      const t = token();
+      return `
+        <div class="card source-card">
+          <div class="source-row">
+            <div class="source-label">钱包</div>
+            <div class="coin dark">BNB</div>
+            <div class="main">
+              <div class="name-row">
+                <div class="name">${w.name}</div>
+                <span class="tag">${w.type}</span>
+              </div>
+              <div class="sub">${w.address} · BSC 网络</div>
+            </div>
+            <button class="source-action" data-action="open-wallet-sheet">切换</button>
+          </div>
+          <button class="source-row" data-action="open-token-sheet">
+            <div class="source-label">币种</div>
+            <div class="coin">${t.symbol.slice(0, 4)}</div>
+            <div class="main">
+              <div class="name">${t.symbol}</div>
+              <div class="sub">${t.network} 网络 · ${t.name}</div>
+            </div>
+            <div class="amount-side">${t.balance} ${t.symbol}<small>≈ ${t.usd}</small></div>
+            <div class="chevron">›</div>
+          </button>
+        </div>
+      `;
+    }
+
+    function paymentWallet() {
+      const w = wallet();
+      return `
+        <div class="card wallet-card">
+          <div class="coin dark">BNB</div>
+          <div class="main">
+            <div class="name-row">
+              <div class="name">${w.name}</div>
+              <span class="tag">${w.type}</span>
+            </div>
+            <div class="sub">${w.address} · BSC 网络</div>
+          </div>
+          <button class="switch" data-action="open-wallet-sheet">切换</button>
+        </div>
+      `;
+    }
+
+    function tokenCard() {
+      const t = token();
+      return `
+        <button class="card token-card token-strip selectable-card" data-action="open-token-sheet">
+          <div class="coin">${t.symbol.slice(0, 4)}<span class="chain-corner">B</span></div>
+          <div class="main">
+            <div class="name">${t.symbol}</div>
+          </div>
+          <div class="chevron">›</div>
+        </button>
+      `;
+    }
+
+    function recipientField(selected) {
+      const value = recipientValue();
+      return `
+        <div class="field compact-field ${selected.length ? "selected" : ""}">
+          <div class="field-main">
+            <input id="recipientInput" class="address-input" value="${esc(value)}" placeholder="输入或粘贴钱包地址" />
+            ${selected.length > 1 ? `<div class="field-meta">批量同额转账 · 可从通讯录继续编辑</div>` : ""}
+          </div>
+          <div class="inline-actions">
+            <button class="inline-icon" data-action="open-address-sheet" title="通讯录">${addressBookIcon()}</button>
+            <button class="inline-icon" data-action="scan" title="扫码">${scanIcon()}</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function amountField(multi) {
+      const t = token();
+      return `
+        <div class="card amount-card">
+          <div class="amount-input-row">
+            <div class="amount-main">
+              <input id="amountInput" class="amount-input" value="${state.amount}" inputmode="decimal" placeholder="0" />
+              ${amountNum() ? `<span class="amount-usd">≈ $${(amountNum() * t.price).toFixed(2)}</span>` : ""}
+            </div>
+            <span class="unit">${t.symbol}</span>
+            <button class="max-btn" data-action="max">最大</button>
+          </div>
+          <div class="balance-row">
+            <span>余额</span>
+            <strong>${t.balance} ${t.symbol}</strong>
+          </div>
+        </div>
+      `;
+    }
+
+    function gasGrid() {
+      return `
+        <div class="gas-grid">
+          ${Object.entries(gasOptions).map(([key, item]) => `
+            <button class="gas-card ${state.gas === key ? "active" : ""}" data-gas="${key}">
+              <div class="gas-name">${item.name}</div>
+              <strong>${item.value}</strong>
+              <small>BNB · ≈ ${item.usd}</small>
+            </button>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    function confirmPage() {
+      const selected = selectedAddresses();
+      const multi = selected.length > 1;
+      const t = token();
+      return `
+        ${nav("转账详情")}
+        <div class="scroll detail-scroll">
+          <div class="hint danger risk-alert">重要提示：请确认收款地址、网络和金额。链上转账提交后不可撤回。</div>
+
+          <div class="detail-hero-card">
+            <div class="label-small">${multi ? "批量转账" : "普通转账"}</div>
+            <div class="big">-${totalAmount()} ${t.symbol}</div>
+          </div>
+
+          <div class="section-title">转账明细</div>
+          <div class="card summary-card detail-card">
+            <div class="summary-row"><span>转账网络</span><strong>${t.network}</strong></div>
+            <div class="summary-row"><span>付款地址</span><strong>${walletDetailLabel()}</strong></div>
+            ${recipientConfirmList(selected)}
+            ${multi ? `<div class="summary-row"><span>单地址金额</span><strong>${state.amount || "0"} ${t.symbol}</strong></div>` : ""}
+            <div class="summary-row"><span>预计手续费</span><strong>${networkFeeLabel()}</strong></div>
+            <div class="summary-row emphasis"><span>预计总扣除</span><strong>${deductionLabel()}</strong></div>
+          </div>
+
+        </div>
+        <div class="bottom detail-bottom">
+          <button class="primary" data-action="confirm-transfer">确认转账</button>
+        </div>
+      `;
+    }
+
+    function recipientConfirmList(selected) {
+      if (selected.length === 1) {
+        const item = selected[0];
+        return `
+          <div class="summary-row"><span>收款地址</span><strong>${displayAddressName(item)}</strong></div>
+        `;
+      }
+
+      if (!selected.length) {
+        return `
+          <div class="summary-row stack-row"><span>收款地址</span><strong>${esc(state.recipientInput)}</strong></div>
+        `;
+      }
+
+      const list = state.confirmExpanded ? selected : selected.slice(0, 2);
+      return `
+        <div class="summary-row">
+          <span>收款地址</span>
+          <strong>${selected.length} 个地址 · <button class="text-link" data-action="toggle-recipients">${state.confirmExpanded ? "收起" : "查看全部"}</button></strong>
+        </div>
+        ${state.confirmExpanded ? `
+          <div class="recipient-list">
+            ${list.map((item, index) => `
+              <div class="recipient-line">
+                <span>${index + 1}.</span>
+                <strong>${displayAddressName(item)}</strong>
+              </div>
+            `).join("")}
+          </div>
+        ` : ""}
+      `;
+    }
+
+    function resultPage() {
+      const selected = selectedAddresses();
+      const multi = selected.length > 1;
+      const t = token();
+      return `
+        ${nav("交易详情", false)}
+        <div class="scroll result-scroll">
+          <div class="result-hero">
+            <div class="result-mark">✓</div>
+            <div class="result-amount">-${totalAmount()} ${t.symbol}</div>
+          </div>
+
+          <div class="section-title">交易明细</div>
+          <div class="card summary-card detail-card result-detail-card">
+            <div class="summary-row"><span>付款地址</span><strong>${walletDetailLabel()}</strong></div>
+            ${resultRecipientRows(selected)}
+            <div class="summary-row"><span>转账网络</span><strong>${t.network}</strong></div>
+            <div class="summary-row"><span>${multi ? "单地址到账金额" : "到账金额"}</span><strong>${receivedPerAddressLabel()}</strong></div>
+            <div class="summary-row"><span>网络手续费</span><strong>${networkFeeLabel()}</strong></div>
+            <div class="summary-row"><span>交易哈希</span><strong class="inline-value"><span>${shortHash()}</span><button class="copy-btn" data-action="copy-hash">复制</button></strong></div>
+            <div class="summary-row"><span>区块浏览器</span><strong><button class="link-value" data-action="toast-explorer">查看链上详情</button></strong></div>
+            <div class="summary-row"><span>交易时间</span><strong>2026-06-09 13:22:41</strong></div>
+          </div>
+        </div>
+        <div class="bottom result-bottom">
+          <div class="secondary-row">
+            <button class="secondary" data-action="toast-records">查看记录</button>
+            <button class="primary" data-action="new-transfer">交易</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function resultRecipientRows(selected) {
+      if (selected.length === 1) {
+        const item = selected[0];
+        return `
+          <div class="summary-row"><span>收款地址</span><strong>${displayAddressName(item)}</strong></div>
+        `;
+      }
+
+      if (!selected.length) {
+        return `
+          <div class="summary-row stack-row"><span>收款地址</span><strong>${esc(state.recipientInput)}</strong></div>
+        `;
+      }
+
+      return `
+        <div class="summary-row">
+          <span>收款地址</span>
+          <strong>${selected.length} 个地址 · <button class="text-link" data-action="toggle-result-recipients">${state.resultExpanded ? "收起" : "查看全部"}</button></strong>
+        </div>
+        ${state.resultExpanded ? `
+          <div class="recipient-list">
+            ${selected.map((item, index) => `
+              <div class="recipient-line">
+                <span>${index + 1}.</span>
+                <strong>${displayAddressName(item)}</strong>
+              </div>
+            `).join("")}
+          </div>
+        ` : ""}
+      `;
+    }
+
+    function addressSheet() {
+      const rows = addresses.filter(item => item.tab === state.activeTab);
+      return `
+        <div class="sheet-mask" data-action="close-sheet-bg">
+          <div class="sheet" data-stop>
+            <div class="drag"></div>
+            <div class="sheet-head">
+              <div>
+                <h2 class="sheet-title">选择收款地址</h2>
+                <div class="sheet-sub"><span class="checkbox-icon">✓</span> 可选择一个或多个地址，支持跨标签多选</div>
+              </div>
+              <button class="close" data-action="close-address-sheet">×</button>
+            </div>
+
+            <div class="tabs">
+              <button class="tab ${state.activeTab === "recent" ? "active" : ""}" data-tab="recent">最近转账</button>
+              <button class="tab ${state.activeTab === "mine" ? "active" : ""}" data-tab="mine">我的钱包</button>
+              <button class="tab ${state.activeTab === "book" ? "active" : ""}" data-tab="book">地址本</button>
+            </div>
+
+            <div class="search">搜索钱包名称 / 地址后四位 / 备注</div>
+
+            <div class="sheet-scroll">
+              <div class="list-caption">${tabCaption()} · ${rows.length}</div>
+              ${rows.map(item => addressRow(item)).join("")}
+            </div>
+
+            <div class="sheet-bottom">
+              <div class="selected-count">已选 <strong>${state.draftIds.length}</strong> 个地址</div>
+              <button class="sheet-confirm" data-action="confirm-addresses" ${state.draftIds.length ? "" : "disabled"}>确定</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function tabCaption() {
+      if (state.activeTab === "mine") return "当前账号下的钱包";
+      if (state.activeTab === "book") return "地址本";
+      return "最近 30 天转账";
+    }
+
+    function addressRow(item) {
+      const checked = state.draftIds.includes(item.id);
+      return `
+        <button class="address-row ${checked ? "selected" : ""}" data-address="${item.id}">
+          <div class="coin dark">BNB</div>
+          <div class="main" style="text-align:left;">
+            <div class="name">${item.name}</div>
+            <div class="sub">${item.address}</div>
+            <div class="sub">${item.balance}</div>
+          </div>
+          <div class="select-box">${checked ? "✓" : ""}</div>
+        </button>
+      `;
+    }
+
+    function walletSheet() {
+      return `
+        <div class="sheet-mask" data-action="close-wallet-sheet-bg">
+          <div class="sheet" style="min-height:410px;max-height:56%;" data-stop>
+            <div class="drag"></div>
+            <div class="sheet-head">
+              <div>
+                <h2 class="sheet-title">切换付款钱包</h2>
+                <div class="sheet-sub">转账前明确展示当前付款地址，避免从错误钱包转出。</div>
+              </div>
+              <button class="close" data-action="close-wallet-sheet">×</button>
+            </div>
+            <div class="sheet-scroll" style="height:250px;">
+              ${wallets.map(item => `
+                <button class="address-row ${item.id === state.walletId ? "selected" : ""}" data-wallet="${item.id}">
+                  <div class="coin dark">BNB</div>
+                  <div class="main" style="text-align:left;">
+                    <div class="name-row"><div class="name">${item.name}</div><span class="tag ${item.type === "观察钱包" ? "ghost" : ""}">${item.type}</span></div>
+                    <div class="sub">${item.address} · ${item.balance}</div>
+                  </div>
+                  <div class="select-box">${item.id === state.walletId ? "✓" : ""}</div>
+                </button>
+              `).join("")}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function tokenSheet() {
+      return `
+        <div class="sheet-mask" data-action="close-token-sheet-bg">
+          <div class="sheet" style="min-height:430px;max-height:58%;" data-stop>
+            <div class="drag"></div>
+            <div class="sheet-head">
+              <div>
+                <h2 class="sheet-title">选择转账币种</h2>
+                <div class="sheet-sub">仅展示当前付款钱包在 BSC 网络下可转出的资产。</div>
+              </div>
+              <button class="close" data-action="close-token-sheet">×</button>
+            </div>
+            <div class="sheet-scroll" style="height:270px;">
+              ${tokens.map(item => `
+                <button class="address-row ${item.id === state.tokenId ? "selected" : ""}" data-token="${item.id}">
+                  <div class="coin">${item.symbol.slice(0, 4)}</div>
+                  <div class="main" style="text-align:left;">
+                    <div class="name">${item.symbol}</div>
+                    <div class="sub">${item.network} 网络 · ${item.name}</div>
+                  </div>
+                  <div class="amount-side">${item.balance}<small>≈ ${item.usd}</small></div>
+                  <div class="select-box">${item.id === state.tokenId ? "✓" : ""}</div>
+                </button>
+              `).join("")}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function processingLayer() {
+      return `
+        <div class="processing">
+          <div>
+            <div class="spinner"></div>
+            <div class="name">交易提交中</div>
+            <div class="sub" style="margin-top:8px;">正在提交链上交易，请勿重复点击</div>
+          </div>
+        </div>
+      `;
+    }
+
+    app.addEventListener("click", event => {
+      if (event.target.closest("[data-stop]")) event.stopPropagation();
+
+      const addressBtn = event.target.closest("[data-address]");
+      if (addressBtn) {
+        const id = addressBtn.dataset.address;
+        if (state.draftIds.includes(id)) {
+          state.draftIds = state.draftIds.filter(item => item !== id);
+        } else {
+          state.draftIds = [...state.draftIds, id];
+        }
+        render();
+        return;
+      }
+
+      const walletBtn = event.target.closest("[data-wallet]");
+      if (walletBtn) {
+        state.walletId = walletBtn.dataset.wallet;
+        state.showWalletSheet = false;
+        render();
+        return;
+      }
+
+      const tokenBtn = event.target.closest("[data-token]");
+      if (tokenBtn) {
+        state.tokenId = tokenBtn.dataset.token;
+        state.showTokenSheet = false;
+        render();
+        return;
+      }
+
+      const tabBtn = event.target.closest("[data-tab]");
+      if (tabBtn) {
+        state.activeTab = tabBtn.dataset.tab;
+        render();
+        return;
+      }
+
+      const gasBtn = event.target.closest("[data-gas]");
+      if (gasBtn) {
+        state.gas = gasBtn.dataset.gas;
+        render();
+        return;
+      }
+
+      const actionBtn = event.target.closest("[data-action]");
+      if (!actionBtn) return;
+
+      const action = actionBtn.dataset.action;
+      if (action === "open-address-sheet") {
+        state.draftIds = [...state.selectedIds];
+        state.showAddressSheet = true;
+        render();
+      } else if (action === "close-address-sheet" || action === "close-sheet-bg") {
+        state.showAddressSheet = false;
+        render();
+      } else if (action === "confirm-addresses") {
+        if (!state.draftIds.length) {
+          showToast("请至少选择 1 个收款地址");
+          return;
+        }
+        state.selectedIds = [...state.draftIds];
+        state.recipientInput = recipientValue();
+        state.showAddressSheet = false;
+        render();
+      } else if (action === "clear-recipients") {
+        state.selectedIds = [];
+        state.draftIds = [];
+        state.recipientInput = "";
+        render("recipientInput");
+      } else if (action === "open-wallet-sheet") {
+        state.showWalletSheet = true;
+        render();
+      } else if (action === "close-wallet-sheet" || action === "close-wallet-sheet-bg") {
+        state.showWalletSheet = false;
+        render();
+      } else if (action === "open-token-sheet") {
+        state.showTokenSheet = true;
+        render();
+      } else if (action === "close-token-sheet" || action === "close-token-sheet-bg") {
+        state.showTokenSheet = false;
+        render();
+      } else if (action === "max") {
+        const t = token();
+        const count = Math.max(recipientCount(), 1);
+        const max = Math.max(Number(t.balance) / count - (t.symbol === "BNB" ? Number(gas().value) / count : 0), 0);
+        state.amount = max ? max.toFixed(6).replace(/0+$/, "").replace(/\.$/, "") : "0";
+        render();
+      } else if (action === "next") {
+        if (!recipientCount()) showToast("请先输入或选择收款地址");
+        else if (!amountNum()) showToast("请输入转账金额");
+        else {
+          state.screen = "confirm";
+          state.confirmExpanded = false;
+          state.resultExpanded = false;
+          render();
+        }
+      } else if (action === "toggle-recipients") {
+        state.confirmExpanded = !state.confirmExpanded;
+        render();
+      } else if (action === "toggle-result-recipients") {
+        state.resultExpanded = !state.resultExpanded;
+        render();
+      } else if (action === "back-transfer") {
+        state.screen = "transfer";
+        render();
+      } else if (action === "confirm-transfer") {
+        state.processing = true;
+        render();
+        setTimeout(() => {
+          state.processing = false;
+          state.screen = "result";
+          state.resultExpanded = false;
+          render();
+        }, 900);
+      } else if (action === "new-transfer") {
+        state.screen = "transfer";
+        state.selectedIds = [];
+        state.draftIds = [];
+        state.recipientInput = "";
+        state.amount = "";
+        state.confirmExpanded = false;
+        state.resultExpanded = false;
+        render();
+      } else if (action === "copy-hash") {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(txHash).catch(() => {});
+        }
+        showToast("哈希值已复制");
+      } else if (action === "scan") {
+        showToast("扫码入口：建议保留在转账页地址区，不放钱包页首屏按钮");
+      } else if (action === "toast-home") {
+        showToast("返回钱包页");
+      } else if (action === "toast-records") {
+        showToast("跳转到账单 / 动态 Tab 的交易记录");
+      } else if (action === "toast-explorer") {
+        showToast("正在打开 BSC 区块浏览器");
+      }
+    });
+
+    app.addEventListener("input", event => {
+      if (event.target.id === "amountInput") {
+        state.amount = event.target.value.replace(/[^\d.]/g, "").replace(/(\..*)\./g, "$1");
+        render("amountInput");
+      }
+      if (event.target.id === "recipientInput") {
+        state.recipientInput = event.target.value;
+        state.selectedIds = [];
+        state.draftIds = [];
+        render("recipientInput");
+      }
+    });
+
+    render();
+  </script>
+</body>
+</html>
