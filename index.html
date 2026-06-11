@@ -1265,8 +1265,14 @@
       font-size: 18px;
     }
 
+    .sheet-bottom.single-action {
+      display: flex;
+      justify-content: flex-end;
+    }
+
     .sheet-confirm {
       height: 48px;
+      min-width: 150px;
       border-radius: 14px;
       background: var(--blue);
       color: #fff;
@@ -1544,16 +1550,16 @@
   <main class="page">
     <aside class="intro">
       <span class="intro-badge">AVE WALLET</span>
-      <h1>转账流程可交互原型</h1>
-      <p>基于 Claude 当前稿和你的反馈重新收敛：保留付款钱包切换、显式多选、批量同额转账、简洁确认页，以及不显示签名/广播中间状态的结果页。</p>
+      <h1>一对一转账流程原型</h1>
+      <p>基于当前转账版本另存：只保留单收款地址转账，保留付款钱包切换、币种选择、扫码/通讯录选址、矿工费选择和简洁确认页。</p>
       <div class="intro-card">
         <h2>这版重点</h2>
         <ul>
           <li>按钮固定在手机底部，不跟随内容滚动。</li>
-          <li>收款地址选择用 checkbox 明确表达可多选。</li>
-          <li>批量转账只填一个“每个地址金额”，不做单地址自定义金额。</li>
+          <li>收款地址只支持选择一个地址。</li>
+          <li>只保留一对一转账路径，减少分支和说明成本。</li>
           <li>删除交易所地址、交易所等标签展示。</li>
-          <li>确认页支持“查看全部”展开收款地址。</li>
+          <li>确认页只展示一对一转账所需字段。</li>
         </ul>
       </div>
     </aside>
@@ -1577,16 +1583,16 @@
       <h3>主路径</h3>
       <ul>
         <li>点击<strong>收款地址输入框</strong>可直接输入或粘贴地址。</li>
-        <li>点击输入框内的<strong>通讯录 icon</strong>打开地址弹窗，勾选多个地址自动进入批量转账。</li>
-        <li>输入金额或点<strong>最大</strong>，选择矿工费，点<strong>下一步</strong>。</li>
-        <li>填写页不展示明细汇总，避免和下一步重复。</li>
-        <li>二级「转账详情」页顶部只展示转账类型和总数量，下面一张明细卡集中确认网络、地址、单地址金额和费用。</li>
+        <li>点击输入框内的<strong>通讯录 icon</strong>打开地址弹窗，选择一个收款地址。</li>
+        <li>输入金额或点<strong>最大</strong>，选择矿工费，点<strong>确定</strong>。</li>
+        <li>填写页不展示明细汇总，避免和确认页重复。</li>
+        <li>二级「转账详情」页集中确认网络、付款地址、收款地址、转账金额和费用。</li>
         <li>确认后进入交易结果页。</li>
       </ul>
       <h3>设计判断</h3>
       <ul>
-        <li>多选能力从“隐藏规则”改为“显式 checkbox + 已选数量”。</li>
-        <li>单/多地址共用同一个收款地址输入框，选择后不改变输入框形态。</li>
+        <li>通讯录选择固定为单选，降低认知成本。</li>
+        <li>手输地址和通讯录选址共用同一条收款地址路径。</li>
         <li>结果页只呈现用户关心的成功结果、hash、费用、网络和时间。</li>
       </ul>
     </aside>
@@ -1606,7 +1612,7 @@
       { id: "w1", tab: "mine", name: "链钱包 02", address: "0x7c09...77a8", fullAddress: "0x7c09F18dB7B8dD92437C1B4788F34f9b2D6c77a8", balance: "BNB: 0.0840 · 余额 $51.41" },
       { id: "w2", tab: "mine", name: "托管钱包 02", address: "0x27b4...8e20", fullAddress: "0x27b41a6fCb25d8CE931016E11aDF6551c1f08e20", balance: "BNB: 0.0000 · 余额 $0.00" },
       { id: "b1", tab: "book", name: "Axon 备用地址", address: "0x21e0...9012", fullAddress: "0x21e04A6a0f3116D1199b4ad128A742Bc15c19012", balance: "备注：常用收款" },
-      { id: "b2", tab: "book", name: "运营测试地址", address: "0xb93e...0c18", fullAddress: "0xb93e4197A51D9e9604fE333B7445574281300c18", balance: "备注：内部测试" }
+      { id: "b2", tab: "book", name: "运营测试地址", address: "0xb93e...0c18", fullAddress: "0xb93e4197A51D9e9604fE333B7445574281300c18", balance: "备注：内部测试", isContract: true }
     ];
 
     const tokens = [
@@ -1633,8 +1639,6 @@
       activeTab: "recent",
       amount: "",
       gas: "recommend",
-      confirmExpanded: false,
-      resultExpanded: false,
       showAddressSheet: false,
       showWalletSheet: false,
       showTokenSheet: false,
@@ -1658,14 +1662,13 @@
     }
 
     function recipientCount() {
-      if (state.selectedIds.length) return state.selectedIds.length;
+      if (state.selectedIds.length) return 1;
       return state.recipientInput.trim() ? 1 : 0;
     }
 
     function recipientValue() {
       const selected = selectedAddresses();
-      if (selected.length === 1) return selected[0].fullAddress;
-      if (selected.length > 1) return `已选择 ${selected.length} 个收款地址`;
+      if (selected.length) return selected[0].fullAddress;
       return state.recipientInput;
     }
 
@@ -1675,17 +1678,12 @@
     }
 
     function rawTotalAmount() {
-      return amountNum() * Math.max(recipientCount(), 1);
+      return amountNum();
     }
 
     function totalAmount() {
       const total = rawTotalAmount();
       return total ? total.toFixed(4).replace(/0+$/, "").replace(/\.$/, "") : "0";
-    }
-
-    function totalDeduction() {
-      const total = rawTotalAmount();
-      return total ? total.toFixed(6).replace(/0+$/, "").replace(/\.$/, "") : "0";
     }
 
     function gas() {
@@ -1699,7 +1697,40 @@
     function nextButtonText() {
       if (!recipientCount()) return "请填写收款地址";
       if (!amountNum()) return "请输入转账金额";
-      return "下一步";
+      return "确定";
+    }
+
+    function backendPrecheckTransfer() {
+      const t = token();
+      const recipient = selectedAddresses()[0] || { fullAddress: state.recipientInput.trim() };
+      const amount = amountNum();
+      const balance = Number(t.balance);
+      const gasFee = Number(gas().value);
+      const nativeBalance = Number(tokens.find(item => item.symbol === "BNB")?.balance || 0);
+
+      // 后端校验规则：
+      // 1. 判断收款地址是否为合约地址；合约地址暂不允许普通转账。
+      // 2. 判断转账币种余额是否充足。
+      // 3. 判断原生币 BNB 是否足够支付矿工费；BNB 转账时还要同时覆盖转账金额 + 矿工费。
+      if (recipient.isContract) {
+        return { ok: false, code: "CONTRACT_ADDRESS", message: "收款地址为合约地址，暂不支持普通转账" };
+      }
+      if (!recipient.fullAddress) {
+        return { ok: false, code: "EMPTY_RECIPIENT", message: "请先输入或选择收款地址" };
+      }
+      if (amount <= 0) {
+        return { ok: false, code: "EMPTY_AMOUNT", message: "请输入转账金额" };
+      }
+      if (amount > balance) {
+        return { ok: false, code: "TOKEN_BALANCE_NOT_ENOUGH", message: `${t.symbol} 余额不足` };
+      }
+      if (t.symbol === "BNB" && amount + gasFee > balance) {
+        return { ok: false, code: "NATIVE_BALANCE_NOT_ENOUGH", message: "BNB 余额不足，需预留矿工费" };
+      }
+      if (t.symbol !== "BNB" && nativeBalance < gasFee) {
+        return { ok: false, code: "GAS_NOT_ENOUGH", message: "BNB 余额不足，无法支付矿工费" };
+      }
+      return { ok: true };
     }
 
     function esc(value) {
@@ -1708,11 +1739,6 @@
         .replaceAll('"', "&quot;")
         .replaceAll("<", "&lt;")
         .replaceAll(">", "&gt;");
-    }
-
-    function deductionLabel() {
-      const t = token();
-      return `${totalDeduction()} ${t.symbol}`;
     }
 
     function formatAmount(value, decimals = 6) {
@@ -1816,7 +1842,6 @@
 
     function transferPage() {
       const selected = selectedAddresses();
-      const multi = selected.length > 1;
       return `
         ${nav("转账")}
         <div class="scroll transfer-scroll ${amountNum() ? "transfer-scroll-with-fee" : ""}">
@@ -1826,8 +1851,8 @@
           <div class="section-title">转账路径</div>
           ${routeCard(selected)}
 
-          <div class="section-title">${multi ? "单地址金额" : "转账金额"}</div>
-          ${amountField(multi)}
+          <div class="section-title">转账金额</div>
+          ${amountField()}
 
           <div class="section-title">
             <span>矿工费</span>
@@ -1869,7 +1894,6 @@
             </div>
           </div>
         </div>
-        ${selected.length > 1 ? `<div class="inline-note">已选择 ${selected.length} 个收款地址，将按同一金额批量转账。</div>` : ""}
       `;
     }
 
@@ -1887,10 +1911,11 @@
     }
 
     function recipientRouteContent(selected) {
-      if (selected.length) {
+      const item = selected[0];
+      if (item) {
         return `
           <div class="recipient-chip">
-            <button class="recipient-summary" data-action="open-address-sheet">${recipientSummary(selected)}</button>
+            <button class="recipient-summary" data-action="open-address-sheet">${displayAddressName(item)}</button>
             <button class="recipient-clear" data-action="clear-recipients" aria-label="清空收款地址">×</button>
           </div>
         `;
@@ -1901,13 +1926,6 @@
         <input id="recipientInput" class="route-input" value="${esc(value)}" placeholder="输入或粘贴钱包地址" />
         ${selected.length === 1 ? `<div class="route-meta">${displayAddressName(selected[0])}</div>` : ""}
       `;
-    }
-
-    function recipientSummary(selected) {
-      if (selected.length === 1) return displayAddressName(selected[0]);
-      const names = selected.slice(0, 2).map(item => displayAddressName(item)).join("、");
-      const rest = selected.length > 2 ? ` <em>等 ${selected.length} 个钱包</em>` : "";
-      return `${names}${rest}`;
     }
 
     function sourceCard() {
@@ -1971,23 +1989,7 @@
       `;
     }
 
-    function recipientField(selected) {
-      const value = recipientValue();
-      return `
-        <div class="field compact-field ${selected.length ? "selected" : ""}">
-          <div class="field-main">
-            <input id="recipientInput" class="address-input" value="${esc(value)}" placeholder="输入或粘贴钱包地址" />
-            ${selected.length > 1 ? `<div class="field-meta">批量同额转账 · 可从通讯录继续编辑</div>` : ""}
-          </div>
-          <div class="inline-actions">
-            <button class="inline-icon" data-action="open-address-sheet" title="通讯录">${addressBookIcon()}</button>
-            <button class="inline-icon" data-action="scan" title="扫码">${scanIcon()}</button>
-          </div>
-        </div>
-      `;
-    }
-
-    function amountField(multi) {
+    function amountField() {
       const t = token();
       return `
         <div class="card amount-card">
@@ -2023,7 +2025,6 @@
 
     function confirmPage() {
       const selected = selectedAddresses();
-      const multi = selected.length > 1;
       const t = token();
       return `
         ${nav("转账详情")}
@@ -2031,7 +2032,7 @@
           <div class="hint danger risk-alert">重要提示：请确认收款地址、网络和金额。链上转账提交后不可撤回。</div>
 
           <div class="detail-hero-card">
-            <div class="label-small">${multi ? "批量转账" : "普通转账"}</div>
+            <div class="label-small">普通转账</div>
             <div class="big">-${totalAmount()} ${t.symbol}</div>
           </div>
 
@@ -2040,9 +2041,8 @@
             <div class="summary-row"><span>转账网络</span><strong>${t.network}</strong></div>
             <div class="summary-row"><span>付款地址</span><strong>${walletDetailLabel()}</strong></div>
             ${recipientConfirmList(selected)}
-            ${multi ? `<div class="summary-row"><span>单地址金额</span><strong>${state.amount || "0"} ${t.symbol}</strong></div>` : ""}
+            <div class="summary-row"><span>转账金额</span><strong>${state.amount || "0"} ${t.symbol}</strong></div>
             <div class="summary-row"><span>预计手续费</span><strong>${networkFeeLabel()}</strong></div>
-            <div class="summary-row emphasis"><span>预计总扣除</span><strong>${deductionLabel()}</strong></div>
           </div>
 
         </div>
@@ -2053,8 +2053,8 @@
     }
 
     function recipientConfirmList(selected) {
-      if (selected.length === 1) {
-        const item = selected[0];
+      const item = selected[0];
+      if (item) {
         return `
           <div class="summary-row"><span>收款地址</span><strong>${displayAddressName(item)}</strong></div>
         `;
@@ -2066,28 +2066,11 @@
         `;
       }
 
-      const list = state.confirmExpanded ? selected : selected.slice(0, 2);
-      return `
-        <div class="summary-row">
-          <span>收款地址</span>
-          <strong>${selected.length} 个地址 · <button class="text-link" data-action="toggle-recipients">${state.confirmExpanded ? "收起" : "查看全部"}</button></strong>
-        </div>
-        ${state.confirmExpanded ? `
-          <div class="recipient-list">
-            ${list.map((item, index) => `
-              <div class="recipient-line">
-                <span>${index + 1}.</span>
-                <strong>${displayAddressName(item)}</strong>
-              </div>
-            `).join("")}
-          </div>
-        ` : ""}
-      `;
+      return "";
     }
 
     function resultPage() {
       const selected = selectedAddresses();
-      const multi = selected.length > 1;
       const t = token();
       return `
         ${nav("交易详情", false)}
@@ -2102,7 +2085,7 @@
             <div class="summary-row"><span>付款地址</span><strong>${walletDetailLabel()}</strong></div>
             ${resultRecipientRows(selected)}
             <div class="summary-row"><span>转账网络</span><strong>${t.network}</strong></div>
-            <div class="summary-row"><span>${multi ? "单地址到账金额" : "到账金额"}</span><strong>${receivedPerAddressLabel()}</strong></div>
+            <div class="summary-row"><span>到账金额</span><strong>${receivedPerAddressLabel()}</strong></div>
             <div class="summary-row"><span>网络手续费</span><strong>${networkFeeLabel()}</strong></div>
             <div class="summary-row"><span>交易哈希</span><strong class="inline-value"><span>${shortHash()}</span><button class="copy-btn" data-action="copy-hash">复制</button></strong></div>
             <div class="summary-row"><span>区块浏览器</span><strong><button class="link-value" data-action="toast-explorer">查看链上详情</button></strong></div>
@@ -2119,8 +2102,8 @@
     }
 
     function resultRecipientRows(selected) {
-      if (selected.length === 1) {
-        const item = selected[0];
+      const item = selected[0];
+      if (item) {
         return `
           <div class="summary-row"><span>收款地址</span><strong>${displayAddressName(item)}</strong></div>
         `;
@@ -2132,22 +2115,7 @@
         `;
       }
 
-      return `
-        <div class="summary-row">
-          <span>收款地址</span>
-          <strong>${selected.length} 个地址 · <button class="text-link" data-action="toggle-result-recipients">${state.resultExpanded ? "收起" : "查看全部"}</button></strong>
-        </div>
-        ${state.resultExpanded ? `
-          <div class="recipient-list">
-            ${selected.map((item, index) => `
-              <div class="recipient-line">
-                <span>${index + 1}.</span>
-                <strong>${displayAddressName(item)}</strong>
-              </div>
-            `).join("")}
-          </div>
-        ` : ""}
-      `;
+      return "";
     }
 
     function addressSheet() {
@@ -2159,7 +2127,6 @@
             <div class="sheet-head">
               <div>
                 <h2 class="sheet-title">选择收款地址</h2>
-                <div class="sheet-sub"><span class="checkbox-icon">✓</span> 可选择一个或多个地址，支持跨标签多选</div>
               </div>
               <button class="close" data-action="close-address-sheet">×</button>
             </div>
@@ -2177,8 +2144,7 @@
               ${rows.map(item => addressRow(item)).join("")}
             </div>
 
-            <div class="sheet-bottom">
-              <div class="selected-count">已选 <strong>${state.draftIds.length}</strong> 个地址</div>
+            <div class="sheet-bottom single-action">
               <button class="sheet-confirm" data-action="confirm-addresses" ${state.draftIds.length ? "" : "disabled"}>确定</button>
             </div>
           </div>
@@ -2284,11 +2250,7 @@
       const addressBtn = event.target.closest("[data-address]");
       if (addressBtn) {
         const id = addressBtn.dataset.address;
-        if (state.draftIds.includes(id)) {
-          state.draftIds = state.draftIds.filter(item => item !== id);
-        } else {
-          state.draftIds = [...state.draftIds, id];
-        }
+        state.draftIds = state.draftIds.includes(id) ? [] : [id];
         render();
         return;
       }
@@ -2339,7 +2301,7 @@
           showToast("请至少选择 1 个收款地址");
           return;
         }
-        state.selectedIds = [...state.draftIds];
+        state.selectedIds = state.draftIds.slice(0, 1);
         state.recipientInput = recipientValue();
         state.showAddressSheet = false;
         render();
@@ -2362,25 +2324,20 @@
         render();
       } else if (action === "max") {
         const t = token();
-        const count = Math.max(recipientCount(), 1);
-        const max = Math.max(Number(t.balance) / count - (t.symbol === "BNB" ? Number(gas().value) / count : 0), 0);
+        const max = Math.max(Number(t.balance) - (t.symbol === "BNB" ? Number(gas().value) : 0), 0);
         state.amount = max ? max.toFixed(6).replace(/0+$/, "").replace(/\.$/, "") : "0";
         render();
       } else if (action === "next") {
         if (!recipientCount()) showToast("请先输入或选择收款地址");
         else if (!amountNum()) showToast("请输入转账金额");
         else {
+          const precheck = backendPrecheckTransfer();
+          if (!precheck.ok) {
+            showToast(precheck.message);
+          }
           state.screen = "confirm";
-          state.confirmExpanded = false;
-          state.resultExpanded = false;
           render();
         }
-      } else if (action === "toggle-recipients") {
-        state.confirmExpanded = !state.confirmExpanded;
-        render();
-      } else if (action === "toggle-result-recipients") {
-        state.resultExpanded = !state.resultExpanded;
-        render();
       } else if (action === "back-transfer") {
         state.screen = "transfer";
         render();
@@ -2390,7 +2347,6 @@
         setTimeout(() => {
           state.processing = false;
           state.screen = "result";
-          state.resultExpanded = false;
           render();
         }, 900);
       } else if (action === "new-transfer") {
@@ -2399,8 +2355,6 @@
         state.draftIds = [];
         state.recipientInput = "";
         state.amount = "";
-        state.confirmExpanded = false;
-        state.resultExpanded = false;
         render();
       } else if (action === "copy-hash") {
         if (navigator.clipboard && navigator.clipboard.writeText) {
