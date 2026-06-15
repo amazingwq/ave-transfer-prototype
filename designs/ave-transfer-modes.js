@@ -1,7 +1,10 @@
 (() => {
-  const modeFromPage = window.AVE_TRANSFER_MODE || "transfer";
   const root = document.getElementById("root");
   const urlParams = new URLSearchParams(window.location.search);
+  const pageFile = window.location.pathname.split("/").pop();
+  const successContainer = pageFile === "ave-transfer-success.html";
+  const partialContainer = pageFile === "ave-transfer-partial.html";
+  const modeFromPage = urlParams.get("mode") || window.AVE_TRANSFER_MODE || "transfer";
   const partialScenario = window.AVE_SUBMIT_RESULT_VARIANT === "partial"
     || urlParams.get("scenario") === "partial"
     || urlParams.get("result") === "partial"
@@ -9,11 +12,17 @@
 
   const pageLinks = partialScenario
     ? {
-      transfer: "ave-transfer-one-to-one.html",
-      collect: "ave-transfer-many-to-one.html?scenario=partial",
-      distribute: "ave-transfer-one-to-many.html?scenario=partial"
+      transfer: "ave-transfer-success.html?mode=transfer",
+      collect: partialContainer ? "ave-transfer-partial.html?mode=collect" : "ave-transfer-many-to-one.html?scenario=partial",
+      distribute: partialContainer ? "ave-transfer-partial.html?mode=distribute" : "ave-transfer-one-to-many.html?scenario=partial"
     }
-    : {
+    : successContainer
+      ? {
+        transfer: "ave-transfer-success.html?mode=transfer",
+        collect: "ave-transfer-success.html?mode=collect",
+        distribute: "ave-transfer-success.html?mode=distribute"
+      }
+      : {
       transfer: "ave-transfer-one-to-one.html",
       collect: "ave-transfer-many-to-one.html",
       distribute: "ave-transfer-one-to-many.html"
@@ -186,7 +195,8 @@
   };
 
   const txHash = "0x974f30d851b2E8c38E413680b2D2D2608F0d26c32";
-  const mode = configs[modeFromPage] ? modeFromPage : "transfer";
+  const rawMode = configs[modeFromPage] ? modeFromPage : "transfer";
+  const mode = partialScenario && rawMode === "transfer" ? "distribute" : rawMode;
   const config = configs[mode];
   const initialScreen = window.AVE_START_SCREEN || "operate";
   const initialResultVariant = window.AVE_RESULT_VARIANT || "success";
@@ -367,7 +377,7 @@
           <div class="intro-card">
             <h2>设计重点</h2>
             <ul>
-              <li>三种模式并列，但每个 HTML 可单独打开。</li>
+              <li>${partialScenario ? "批量部分成功只保留「归集 / 分发」两种模式。" : "三种模式并列，当前链接内即可切换查看。"}</li>
               <li>地址区只展示备注，没备注才展示地址。</li>
               <li>提交前后都保留网络、金额、地址和费用确认。</li>
             </ul>
@@ -428,9 +438,12 @@
   }
 
   function operationTabs() {
+    const tabConfigs = partialScenario
+      ? [configs.collect, configs.distribute]
+      : Object.values(configs);
     return `
       <div class="mode-tabs">
-        ${Object.values(configs).map(item => `
+        ${tabConfigs.map(item => `
           <a class="${item.key === config.key ? "active" : ""}" href="${pageLinks[item.key]}">${item.tab}</a>
         `).join("")}
       </div>
